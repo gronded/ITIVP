@@ -8,7 +8,7 @@ const resultDiv = document.getElementById('result');
 const loadingDiv = document.getElementById('loading');
 const errorDiv = document.getElementById('error');
 
-const apiKey = 'YOUR_API_KEY'; // Замените на свой ключ API
+const apiKey = 'fca_live_zxvxYWFH2HdfusDM89FHvkEYEbFadNw2AOMqKkC1'; // Замените на свой ключ API
 const apiUrl = 'https://api.freecurrencyapi.com/v1/latest?apikey=' + apiKey;
 
 // Функция для получения списка валют и заполнения выпадающих списков
