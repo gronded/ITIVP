@@ -8,7 +8,7 @@ const resultDiv = document.getElementById('result');
 const loadingDiv = document.getElementById('loading');
 const errorDiv = document.getElementById('error');
 
-const apiKey = 'fca_live_zxvxYWFH2HdfusDM89FHvkEYEbFadNw2AOMqKkC1'; // Замените на свой ключ API
+const apiKey = 'YOUR_API_KEY'; // Замените на свой ключ API
 const apiUrl = 'https://api.freecurrencyapi.com/v1/latest?apikey=' + apiKey;
 
 // Функция для получения списка валют и заполнения выпадающих списков
@@ -18,9 +18,14 @@ async function getCurrencies() {
 
     try {
         const response = await fetch(apiUrl + '&base_currency=USD'); // Получаем список валют относительно USD
+
+        if (!response.ok) {
+            throw new Error(`Ошибка при загрузке валют: ${response.status} ${response.statusText}`);
+        }
+
         const data = await response.json();
 
-        if (response.ok) {
+        if (data && data.data) {
             const currencies = Object.keys(data.data);
 
             // Заполняем выпадающие списки
@@ -36,10 +41,11 @@ async function getCurrencies() {
                 toCurrencySelect.appendChild(option2);
             });
         } else {
-            errorDiv.textContent = `Ошибка при загрузке валют: ${response.status} ${response.statusText}`;
+            throw new Error('Неверный формат данных от API');
         }
     } catch (error) {
-        errorDiv.textContent = `Ошибка сети: ${error.message}`;
+        errorDiv.textContent = `Ошибка: ${error.message}`;
+        console.error(error); // Выводим ошибку в консоль для отладки
     } finally {
         loadingDiv.style.display = 'none';
     }
@@ -52,17 +58,23 @@ async function convertCurrency(amount, fromCurrency, toCurrency) {
 
     try {
         const response = await fetch(apiUrl + `&base_currency=${fromCurrency}&currencies=${toCurrency}`);
+
+        if (!response.ok) {
+            throw new Error(`Ошибка при конвертации: ${response.status} ${response.statusText}`);
+        }
+
         const data = await response.json();
 
-        if (response.ok) {
+        if (data && data.data && data.data[toCurrency]) {
             const rate = data.data[toCurrency];
             const result = amount * rate;
             resultDiv.textContent = `${amount} ${fromCurrency} = ${result.toFixed(2)} ${toCurrency}`;
         } else {
-            errorDiv.textContent = `Ошибка при конвертации: ${response.status} ${response.statusText}`;
+            throw new Error('Не удалось получить курс валюты');
         }
     } catch (error) {
-        errorDiv.textContent = `Ошибка сети: ${error.message}`;
+        errorDiv.textContent = `Ошибка: ${error.message}`;
+        console.error(error); // Выводим ошибку в консоль для отладки
     } finally {
         loadingDiv.style.display = 'none';
     }
@@ -73,14 +85,18 @@ async function convertCurrency(amount, fromCurrency, toCurrency) {
 form.addEventListener('submit', function(event) {
     event.preventDefault(); // Предотвращаем перезагрузку страницы
 
-    const amount = parseFloat(amountInput.value);
-    const fromCurrency = fromCurrencySelect.value;
-    const toCurrency = toCurrencySelect.value;
+    let amount = parseFloat(amountInput.value);
 
-    if (isNaN(amount) || amount <= 0) {
+    if (isNaN(amount)) {
         errorDiv.textContent = 'Пожалуйста, введите корректную сумму.';
         return;
     }
+
+    // Округляем до двух знаков после запятой
+    amount = amount.toFixed(2);
+
+    const fromCurrency = fromCurrencySelect.value;
+    const toCurrency = toCurrencySelect.value;
 
     convertCurrency(amount, fromCurrency, toCurrency);
 });
